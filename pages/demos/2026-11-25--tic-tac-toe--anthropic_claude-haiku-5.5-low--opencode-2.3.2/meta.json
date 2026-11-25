@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-25",
+  "scenario": "tic-tac-toe",
+  "scenario_title": "Tic tac toe with finish animation",
+  "model": "anthropic/claude-haiku-5.5",
+  "effort": "low",
+  "agent": "opencode",
+  "agent_version": "2.3.2",
+  "mcp_servers": [
+    "playwright",
+    "context7"
+  ],
+  "status": "success",
+  "timeout_s": 600,
+  "errors": [],
+  "dir": "2026-11-25--tic-tac-toe--anthropic_claude-haiku-5.5-low--opencode-2.3.2",
+  "artifacts": [
+    "index.html"
+  ],
+  "stats": {
+    "duration_s": 57.23,
+    "generation_s": 56.03,
+    "ttft_s": 2.21,
+    "tool_time_s": 24.42,
+    "tokens": {
+      "input": 6,
+      "output": 8518,
+      "reasoning": 5502,
+      "cache_read": 11820,
+      "cache_write": 22056
+    },
+    "tokens_per_s": 250.22,
+    "cost_usd": 0.0098858,
+    "api_calls": 2,
+    "tool_calls_total": 1,
+    "tool_calls": {
+      "write": 1
+    },
+    "mcp_calls": {},
+    "tool_errors": 0
+  }
+}

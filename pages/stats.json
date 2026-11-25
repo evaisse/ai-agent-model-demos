@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-11-25T22:23:11+00:00",
+  "totals": {
+    "runs": 1,
+    "scenarios": 1,
+    "models": 1,
+    "cost_usd": 0.009886
+  },
+  "by_model": [
+    {
+      "key": "anthropic/claude-haiku-5.5",
+      "runs": 1,
+      "success": 1,
+      "total_cost_usd": 0.009886,
+      "avg_cost_usd": 0.009886,
+      "avg_duration_s": 57.23,
+      "avg_tokens_per_s": 250.22,
+      "avg_tool_calls": 1.0
+    }
+  ],
+  "by_scenario": [
+    {
+      "key": "tic-tac-toe",
+      "runs": 1,
+      "success": 1,
+      "total_cost_usd": 0.009886,
+      "avg_cost_usd": 0.009886,
+      "avg_duration_s": 57.23,
+      "avg_tokens_per_s": 250.22,
+      "avg_tool_calls": 1.0
+    }
+  ],
+  "runs": [
+    {
+      "dir": "2026-11-25--tic-tac-toe--anthropic_claude-haiku-5.5-low--opencode-2.3.2",
+      "date": "2026-11-25",
+      "scenario": "tic-tac-toe",
+      "model": "anthropic/claude-haiku-5.5",
+      "effort": "low",
+      "agent": "opencode",
+      "agent_version": "2.3.2",
+      "status": "success",
+      "stats": {
+        "duration_s": 57.23,
+        "generation_s": 56.03,
+        "ttft_s": 2.21,
+        "tool_time_s": 24.42,
+        "tokens": {
+          "input": 6,
+          "output": 8518,
+          "reasoning": 5502,
+          "cache_read": 11820,
+          "cache_write": 22056
+        },
+        "tokens_per_s": 250.22,
+        "cost_usd": 0.0098858,
+        "api_calls": 2,
+        "tool_calls_total": 1,
+        "tool_calls": {
+          "write": 1
+        },
+        "mcp_calls": {},
+        "tool_errors": 0
+      }
+    }
+  ]
+}

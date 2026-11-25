@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="/ai-agent-model-demos/demos/2026-11-25--tic-tac-toe--anthropic_claude-haiku-5.5-low--opencode-2.3.2/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic Tac Toe</title>
+<style>
+  :root {
+    --bg1: #07080f;
+    --bg2: #171033;
+    --glass: rgba(255, 255, 255, 0.045);
+    --line: rgba(255, 255, 255, 0.11);
+    --x: #ff8a65;
+    --o: #56d4ff;
+    --gold: #f6cf72;
+    --text: #f5f2ff;
+    --muted: #9893b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 600px at 10% -10%, #3a1d6e 0%, transparent 60%),
+      radial-gradient(800px 600px at 110% 110%, #0c4658 0%, transparent 60%),
+      linear-gradient(160deg, var(--bg1), var(--bg2));
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    width: min(92vw, 420px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+
+  header { text-align: center; }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  h1 {
+    margin-top: 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 46px;
+    letter-spacing: -0.01em;
+  }
+
+  .scores {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .score {
+    padding: 12px 8px;
+    text-align: center;
+    border-radius: 16px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .score .label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .score .val {
+    margin-top: 2px;
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score.x { color: var(--x); }
+  .score.o { color: var(--o); }
+  .score.d { color: var(--gold); }
+
+  .score.active {
+    transform: translateY(-3px);
+    border-color: currentColor;
+    box-shadow: 0 10px 30px -12px currentColor;
+  }
+
+  .status {
+    min-height: 28px;
+    font-size: 17px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .status strong { color: var(--text); font-weight: 600; }
+
+  .status.pop { animation: pop 0.6s cubic-bezier(.2,1.4,.4,1); }
+
+  .board-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+  }
+
+  .frame {
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+    border: 1px solid var(--line);
+    box-shadow:
+      0 40px 80px -30px rgba(0, 0, 0, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(14px);
+  }
+
+  .board-wrap.shake { animation: shake 0.5s ease; }
+
+  .grid, .winline {
+    position: absolute;
+    inset: 22px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4%;
+  }
+
+  .winline {
+    width: calc(100% - 44px);
+    height: calc(100% - 44px);
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .winline path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(246, 207, 114, 0.8));
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+
+  .winline.show path { animation: draw 0.6s 0.1s ease-out forwards; }
+
+  .cell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 20px;
+    cursor: pointer;
+    color: inherit;
+    background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.09),
+      0 8px 20px rgba(0,0,0,0.28);
+    transition: transform 0.2s ease, background 0.3s ease, opacity 0.4s ease;
+  }
+
+  .cell:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: linear-gradient(160deg, rgba(255,255,255,0.15), rgba(255,255,255,0.04));
+  }
+
+  .cell:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .cell:disabled { cursor: default; }
+
+  .cell.x:disabled, .cell.o:disabled { transform: none; }
+
+  .cell.dim { opacity: 0.45; }
+
+  .cell.win {
+    animation: glow 1.1s ease-in-out infinite alternate;
+  }
+
+  .cell.x.win { --c: var(--x); }
+  .cell.o.win { --c: var(--o); }
+
+  @keyframes glow {
+    from { box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 0 0 0 var(--c); }
+    to   { box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 0 28px 2px var(--c); }
+  }
+
+  .mark {
+    width: 58%;
+    height: 58%;
+    overflow: visible;
+  }
+
+  .mark path {
+    fill: none;
+    stroke-width: 11;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+  }
+
+  .cell.x .mark path { stroke: var(--x); filter: drop-shadow(0 0 10px rgba(255,138,101,0.5)); }
+  .cell.o .mark path { stroke: var(--o); filter: drop-shadow(0 0 10px rgba(86,212,255,0.5)); }
+
+  .cell.x.new .mark path { animation: draw 0.45s cubic-bezier(.3,.7,.3,1) both; }
+  .cell.o.new .mark path { animation: draw 0.6s cubic-bezier(.3,.7,.3,1) both; }
+  .cell.new .mark path + path { animation-delay: 0.18s; }
+
+  .cell .mark path:first-child { }
+
+  .cell.x .mark path + path { animation-delay: 0.18s; }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  button.btn {
+    flex: 1;
+    font: inherit;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text);
+    padding: 13px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+  }
+
+  button.btn.primary {
+    background: linear-gradient(135deg, #f6cf72, #ff8a65);
+    color: #1a1027;
+    border-color: transparent;
+    box-shadow: 0 12px 30px -10px rgba(246, 207, 114, 0.6);
+  }
+
+  button.btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.25); }
+  button.btn:active { transform: translateY(1px) scale(0.99); }
+  button.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
+  .hint kbd {
+    font-family: inherit;
+    padding: 1px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--glass);
+  }
+
+  .banner {
+    position: fixed;
+    left: 50%;
+    top: 14%;
+    transform: translate(-50%, -20px);
+    padding: 18px 30px;
+    border-radius: 22px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 30px;
+    text-align: center;
+    background: rgba(12, 10, 24, 0.7);
+    border: 1px solid rgba(246, 207, 114, 0.35);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.8);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.6s cubic-bezier(.2,1.3,.4,1);
+    z-index: 5;
+  }
+
+  .banner.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .banner small {
+    display: block;
+    margin-top: 4px;
+    font-family: "Inter", system-ui, sans-serif;
+    font-style: normal;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  #confetti {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  @keyframes draw {
+    from { stroke-dashoffset: 100; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(7px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(3px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="eyebrow">Two players · One device</div>
+      <h1>Tic Tac Toe</h1>
+    </header>
+
+    <section class="scores" aria-label="Scoreboard">
+      <div class="score x" id="scoreX"><div class="label">Player X</div><div class="val">0</div></div>
+      <div class="score d" id="scoreD"><div class="label">Draws</div><div class="val">0</div></div>
+      <div class="score o" id="scoreO"><div class="label">Player O</div><div class="val">0</div></div>
+    </section>
+
+    <div class="status" id="status" aria-live="polite"></div>
+
+    <div class="board-wrap" id="boardWrap">
+      <div class="frame"></div>
+      <div class="grid" id="grid" role="grid" aria-label="Game board"></div>
+      <svg class="winline" id="winline" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path id="winPath" pathLength="100" d=""/>
+      </svg>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="resetScores">Reset scores</button>
+      <button class="btn primary" id="restart">New round</button>
+    </div>
+
+    <div class="hint">Use the mouse, touch, or keys <kbd>1</kbd>–<kbd>9</kbd> to play</div>
+  </main>
+
+  <div class="banner" id="banner"></div>
+  <canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  const LINES = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+  ];
+  const C = [13.67, 50, 86.33];
+  const MARKS = {
+    X: '<path pathLength="100" d="M28 28 L72 72"/><path pathLength="100" d="M72 28 L28 72"/>',
+    O: '<path pathLength="100" d="M50 20 A30 30 0 1 1 49.9 20"/>'
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const grid = $('grid');
+  const status = $('status');
+  const banner = $('banner');
+  const boardWrap = $('boardWrap');
+  const winPath = $('winPath');
+  const winline = $('winline');
+  const cells = [];
+
+  let board, current, over, starter;
+  const scores = { X: 0, O: 0, D: 0 };
+
+  for (let i = 0; i < 9; i++) {
+    const b = document.createElement('button');
+    b.className = 'cell';
+    b.setAttribute('aria-label', `Cell ${i + 1}`);
+    b.addEventListener('click', () => play(i));
+    grid.appendChild(b);
+    cells.push(b);
+  }
+
+  function winnerInfo() {
+    for (const line of LINES) {
+      const [a, b, c] = line;
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) return { player: board[a], line };
+    }
+    return null;
+  }
+
+  function play(i) {
+    if (over || board[i]) return;
+    board[i] = current;
+    const cell = cells[i];
+    cell.classList.add(current.toLowerCase(), 'new');
+    cell.innerHTML = `<svg class="mark" viewBox="0 0 100 100" aria-hidden="true">${MARKS[current]}</svg>`;
+    cell.disabled = true;
+    cell.setAttribute('aria-label', `Cell ${i + 1}, ${current}`);
+
+    const result = winnerInfo();
+    if (result) return finish(result.player, result.line);
+    if (board.every(Boolean)) return finish(null);
+
+    current = current === 'X' ? 'O' : 'X';
+    updateStatus();
+  }
+
+  function finish(winner, line) {
+    over = true;
+    cells.forEach(c => c.disabled = true);
+
+    if (winner) {
+      scores[winner]++;
+      line.forEach(i => cells[i].classList.add('win'));
+      cells.forEach((c, i) => { if (!line.includes(i)) c.classList.add('dim'); });
+      drawWinLine(line);
+      setStatus(`<strong>${winner}</strong> takes the round`, 'pop');
+      showBanner(`${winner} wins!`, 'Round to ' + winner);
+      celebrate(winner === 'X' ? ['#ff8a65', '#ffd0a8', '#f6cf72'] : ['#56d4ff', '#b8f0ff', '#f6cf72'], 180);
+    } else {
+      scores.D++;
+      cells.forEach(c => c.classList.add('dim'));
+      boardWrap.classList.remove('shake');
+      void boardWrap.offsetWidth;
+      boardWrap.classList.add('shake');
+      setStatus('<strong>A draw</strong> — nobody blinked', 'pop');
+      showBanner('Draw game', 'Evenly matched');
+      celebrate(['#f6cf72', '#ffffff', '#9893b8'], 70);
+    }
+    updateScores();
+  }
+
+  function drawWinLine(line) {
+    const pt = (i) => [C[i % 3], C[Math.floor(i / 3)]];
+    let [x1, y1] = pt(line[0]);
+    let [x2, y2] = pt(line[2]);
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    const ex = (dx / len) * 5, ey = (dy / len) * 5;
+    x1 -= ex; y1 -= ey; x2 += ex; y2 += ey;
+    winPath.setAttribute('d', `M${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)}`);
+    winline.classList.remove('show');
+    void winline.getBoundingClientRect();
+    winline.classList.add('show');
+  }
+
+  function setStatus(html, animClass) {
+    status.innerHTML = html;
+    status.classList.remove('pop');
+    void status.offsetWidth;
+    if (animClass) status.classList.add(animClass);
+  }
+
+  function updateStatus() {
+    const cls = current === 'X' ? 'X' : 'O';
+    setStatus(`Turn for <strong style="color:var(--${cls === 'X' ? 'x' : 'o'})">${current}</strong>`);
+    $('scoreX').classList.toggle('active', current === 'X');
+    $('scoreO').classList.toggle('active', current === 'O');
+  }
+
+  function updateScores() {
+    $('scoreX').querySelector('.val').textContent = scores.X;
+    $('scoreO').querySelector('.val').textContent = scores.O;
+    $('scoreD').querySelector('.val').textContent = scores.D;
+    $('scoreX').classList.remove('active');
+    $('scoreO').classList.remove('active');
+  }
+
+  let bannerTimer;
+  function showBanner(title, sub) {
+    clearTimeout(bannerTimer);
+    banner.innerHTML = `${title}<small>${sub}</small>`;
+    banner.classList.add('show');
+    bannerTimer = setTimeout(() => banner.classList.remove('show'), 2600);
+  }
+
+  function newRound() {
+    board = Array(9).fill(null);
+    over = false;
+    starter = starter === 'X' ? 'O' : 'X';
+    current = starter;
+    cells.forEach((c, i) => {
+      c.className = 'cell';
+      c.innerHTML = '';
+      c.disabled = false;
+      c.setAttribute('aria-label', `Cell ${i + 1}`);
+    });
+    winPath.setAttribute('d', '');
+    winline.classList.remove('show');
+    banner.classList.remove('show');
+    updateStatus();
+    updateScores();
+  }
+
+  $('restart').addEventListener('click', newRound);
+  $('resetScores').addEventListener('click', () => {
+    scores.X = scores.O = scores.D = 0;
+    starter = null;
+    newRound();
+    updateScores();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '1' && e.key <= '9' && !e.metaKey && !e.ctrlKey) play(Number(e.key) - 1);
+    if (e.key === 'r' || e.key === 'R') newRound();
+  });
+
+  // Confetti
+  const canvas = $('confetti');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let running = false;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  function celebrate(colors, count) {
+    if (reduce) return;
+    const originY = innerHeight * 0.45;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4 + Math.random() * 9;
+      particles.push({
+        x: innerWidth / 2 + (Math.random() - 0.5) * 120,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 5,
+        w: 6 + Math.random() * 6,
+        h: 3 + Math.random() * 4,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.3,
+        color: colors[(Math.random() * colors.length) | 0],
+        life: 0,
+        shape: Math.random() < 0.2 ? 'circle' : 'rect'
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    particles = particles.filter(p => p.y < innerHeight + 40 && p.life < 300);
+    for (const p of particles) {
+      p.life++;
+      p.vx *= 0.99;
+      p.vy = p.vy * 0.99 + 0.18;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - p.life / 300);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.h, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+      ctx.restore();
+    }
+    if (particles.length) requestAnimationFrame(tick);
+    else { running = false; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+
+  $('scoreX').classList.add('x');
+  newRound();
+})();
+</script>
+</body>
+</html>
