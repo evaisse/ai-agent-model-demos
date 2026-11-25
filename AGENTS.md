@@ -5,7 +5,7 @@ on OpenRouter models, with a fixed MCP set (Playwright + Context7). Output is pu
 
 ## Layout
 
-- `demo.py` — CLI (argparse): `wizard` (default), `run`, `models`, `agents`, `prompts`, `index`, `check-export`, `docker-build`, `serve`
+- `demo.py` — CLI (argparse): `wizard` (default), `run`, `models`, `agents`, `prompts`, `add-prompt`, `index`, `check-export`, `docker-build`, `serve`
 - `demolib/` — `openrouter` (models, 24h cache in `var/`), `agents` (registry), `docker`, `runner` (run + publish),
   `session` (stats), `anonymize`, `report` (report.html), `index` (pages/index.html + stats.json), `export_check`
 - `docker/` — agent shell image (`Dockerfile`, `opencode.json` MCP config, `run-agent.sh`)

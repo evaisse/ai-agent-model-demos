@@ -13,7 +13,7 @@ from demolib import openrouter
 from demolib.docker import build_image, docker_ready, image_exists
 from demolib.export_check import check_tree
 from demolib.index import build_index
-from demolib.runner import PAGES, ROOT, VAR, execute, list_prompts, pages_base
+from demolib.runner import PAGES, ROOT, VAR, create_prompt, execute, list_prompts, pages_base, slugify
 from demolib.anonymize import default_secrets
 
 EFFORTS = ["default", "minimal", "low", "medium", "high"]
@@ -128,9 +128,51 @@ def do_run(args, interactive=False):
     return finish(meta, interactive, args.commit)
 
 
+NEW_PROMPT = {"id": None, "title": "+ New scenario…"}
+
+
+def read_multiline(message):
+    print(f"{message} (finish with a line containing only '.', or Ctrl-D)")
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line.strip() == ".":
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def add_prompt_interactive(title=None, scenario_id=None, body=None):
+    title = title or ask("Title")
+    scenario_id = scenario_id or ask("Scenario id", slugify(title or ""))
+    body = body if body is not None else read_multiline("Prompt")
+    try:
+        path = create_prompt(scenario_id, title or scenario_id, body)
+    except ValueError as exc:
+        sys.exit(f"✖ {exc}")
+    print(f"✔ created {path.relative_to(ROOT)}")
+    return scenario_id
+
+
+def cmd_add_prompt(args):
+    body = None
+    if args.file == "-":
+        body = sys.stdin.read()
+    elif args.file:
+        body = Path(args.file).read_text()
+    add_prompt_interactive(args.title, args.id, body)
+
+
 def cmd_wizard(args):
     require_key()
-    scenario = choose("Scenario (prompts/)", list_prompts(), lambda p: f"{p['id']:<24} {p['title']}")
+    scenario = choose("Scenario (prompts/)", list_prompts() + [NEW_PROMPT],
+                      lambda p: f"{p['id']:<24} {p['title']}" if p["id"] else p["title"])
+    if scenario is NEW_PROMPT:
+        new_id = add_prompt_interactive()
+        scenario = next(p for p in list_prompts() if p["id"] == new_id)
     model = choose_model(models())
     efforts = EFFORTS if openrouter.supports_reasoning(model) else ["default"]
     effort = choose("Reasoning effort", efforts, str) if len(efforts) > 1 else "default"
@@ -213,6 +255,11 @@ def parser():
     m.set_defaults(fn=cmd_models)
     sub.add_parser("agents", help="list coding agents").set_defaults(fn=cmd_agents)
     sub.add_parser("prompts", help="list scenarios in prompts/").set_defaults(fn=cmd_prompts)
+    ap = sub.add_parser("add-prompt", help="add a scenario to prompts/ (asks for missing fields)")
+    ap.add_argument("--id", help="scenario id, lowercase-kebab-case (default: from title)")
+    ap.add_argument("--title")
+    ap.add_argument("--file", help="read the prompt body from a file, or '-' for stdin")
+    ap.set_defaults(fn=cmd_add_prompt)
     sub.add_parser("index", help="rebuild pages/index.html and stats.json").set_defaults(fn=cmd_index)
     sub.add_parser("check-export", help="scan pages/ for secrets and forbidden files").set_defaults(fn=cmd_check)
     b = sub.add_parser("docker-build", help="build the agent shell image")

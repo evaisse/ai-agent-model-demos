@@ -39,3 +39,24 @@ class PublishRunTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CreatePromptTest(unittest.TestCase):
+    def test_create_prompt(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runner, "PROMPTS", Path(tmp)):
+            path = runner.create_prompt("my-scene", "My scene", "Build a thing.\n")
+            self.assertEqual(path.read_text(), "---\ntitle: My scene\n---\n\nBuild a thing.\n")
+            self.assertEqual([p["id"] for p in runner.list_prompts()], ["my-scene"])
+            with self.assertRaises(ValueError):
+                runner.create_prompt("my-scene", "dup", "x")
+
+    def test_create_prompt_validation(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(runner, "PROMPTS", Path(tmp)):
+            for bad in ("Bad Id", "../x", "", "a/b"):
+                with self.assertRaises(ValueError):
+                    runner.create_prompt(bad, "t", "body")
+            with self.assertRaises(ValueError):
+                runner.create_prompt("ok", "t", "   ")
+
+    def test_slugify(self):
+        self.assertEqual(runner.slugify("  Cool 3D Spinner!! "), "cool-3d-spinner")

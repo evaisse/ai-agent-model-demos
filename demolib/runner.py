@@ -39,6 +39,27 @@ def list_prompts():
     return out
 
 
+PROMPT_ID = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def slugify(text):
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+def create_prompt(scenario_id, title, body):
+    if not PROMPT_ID.match(scenario_id or ""):
+        raise ValueError(f"invalid scenario id {scenario_id!r} (use lowercase-kebab-case)")
+    if not body.strip():
+        raise ValueError("prompt body is empty")
+    path = PROMPTS / f"{scenario_id}.md"
+    if path.exists():
+        raise ValueError(f"scenario {scenario_id!r} already exists")
+    title = " ".join(title.split()) or scenario_id
+    PROMPTS.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\ntitle: {title}\n---\n\n{body.strip()}\n")
+    return path
+
+
 def parse_prompt(text):
     meta = {}
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)

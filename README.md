@@ -19,6 +19,7 @@ make wizard                # pick scenario, model, effort, agent → run → ind
 python3 demo.py run --scenario tic-tac-toe --model anthropic/claude-sonnet-5 --effort high --commit
 python3 demo.py models "qwen coder"
 python3 demo.py prompts
+python3 demo.py add-prompt   # new scenario in prompts/
 make test                  # unit tests + export safety check of pages/
 make serve                 # preview at http://127.0.0.1:8000/<repo>/
 ```
@@ -39,7 +40,9 @@ make serve                 # preview at http://127.0.0.1:8000/<repo>/
 
 ## Adding a scenario
 
-Add `prompts/<scenarioId>.md` with an optional `title` front matter.
+`make add-prompt` (or `python3 demo.py add-prompt --title "…" --file prompt.md`) creates
+`prompts/<scenarioId>.md`; the wizard also offers "+ New scenario…" in its scenario list.
+You can also add the file by hand, with an optional `title` front matter.
 
 ## Safety
 

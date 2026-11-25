@@ -1,4 +1,4 @@
-.PHONY: wizard test index check docker-build serve models
+.PHONY: add-prompt wizard test index check docker-build serve models
 
 wizard:
 	python3 demo.py wizard
@@ -20,3 +20,6 @@ serve:
 
 models:
 	python3 demo.py models
+
+add-prompt:
+	python3 demo.py add-prompt
