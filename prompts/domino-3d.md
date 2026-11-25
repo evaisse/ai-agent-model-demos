@@ -1,0 +1,6 @@
+---
+title: 3D domino spiral chain reaction
+---
+
+In a single HTML file named index.html, create a 3d simulation of 200 dominoes arranged in a spiral. The outermost domino falls, triggering a satisfying, cascading chain reaction towards the center. No interactions. 
+

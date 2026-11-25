@@ -5,10 +5,11 @@
 tmp/
 build/
 var/
+__pycache__/
+*.pyc
 .aider*
 .crush
 .claude
 .gemini
 node_modules/
-.env
 results/

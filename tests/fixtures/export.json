@@ -1,0 +1,29 @@
+{
+  "info": {"id": "ses_abc", "title": "run", "directory": "/workspace", "time": {"created": 1000, "updated": 21000}},
+  "messages": [
+    {"info": {"id": "m1", "role": "user", "time": {"created": 1000}},
+     "parts": [{"type": "text", "text": "Build it. key sk-or-v1-0123456789abcdef0123456789abcdef"}]},
+    {"info": {"id": "m2", "role": "assistant", "modelID": "x/y", "providerID": "openrouter", "cost": 0.01,
+              "tokens": {"input": 1000, "output": 200, "reasoning": 50, "cache": {"read": 300, "write": 0}},
+              "time": {"created": 2000, "completed": 7000}},
+     "parts": [
+       {"type": "step-start"},
+       {"type": "reasoning", "text": "thinking in /Users/alice/project"},
+       {"type": "tool", "tool": "context7_resolve-library-id", "callID": "c1",
+        "state": {"status": "completed", "input": {"libraryName": "three"}, "output": "ok", "time": {"start": 3000, "end": 3500}}},
+       {"type": "tool", "tool": "write", "callID": "c2",
+        "state": {"status": "completed", "input": {"filePath": "/workspace/index.html"}, "output": "done", "time": {"start": 4000, "end": 4100}}},
+       {"type": "step-finish", "tokens": {"input": 1000, "output": 200, "reasoning": 50, "cache": {"read": 300, "write": 0}}, "cost": 0.01}
+     ]},
+    {"info": {"id": "m3", "role": "assistant", "modelID": "x/y", "cost": 0.02,
+              "tokens": {"input": 2000, "output": 300, "reasoning": 0, "cache": {"read": 0, "write": 0}},
+              "time": {"created": 8000, "completed": 13000}},
+     "parts": [
+       {"type": "step-start"},
+       {"type": "tool", "tool": "playwright_browser_navigate", "callID": "c3",
+        "state": {"status": "error", "input": {"url": "file:///home/bob/x.html"}, "error": "boom", "time": {"start": 9000, "end": 9200}}},
+       {"type": "text", "text": "Done. Contact me@corp.io"},
+       {"type": "step-finish", "tokens": {"input": 2000, "output": 300, "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.02}
+     ]}
+  ]
+}
